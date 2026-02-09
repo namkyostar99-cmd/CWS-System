@@ -23,18 +23,20 @@
 
 # 프로젝트 구조
 
->Plaintext
->├── app.py              # Flask 메인 서버 및 라우팅
->├── control_logic.py    # ROI 판별 및 영상 처리 엔진
->├── yolo_dummy.py       # 객체 인식 시뮬레이션 모델
->├── database.py         # SQLite DB 연동 및 테이블 관리
->├── static/
->│   └── violations/     # 위반 증거 스크린샷 저장 폴더
->└── templates/
->    ├── index.html      # 메인 진입 페이지
->    ├── login.html      # 로그인 페이지
->    ├── monitoring.html # 실시간 관제 대시보드
->    └── violation_detail.html # 개별 위반 증거 확인 페이지
+```
+CWS-System/
+├── app.py              # Flask 메인 서버 및 라우팅
+├── control_logic.py    # ROI 판별 및 영상 처리 엔진
+├── yolo_dummy.py       # 객체 인식 시뮬레이션 모델
+├── database.py         # SQLite DB 연동 및 테이블 관리
+├── static/
+│   └── violations/     # 위반 증거 스크린샷 저장 폴더
+└── templates/
+    ├── index.html      # 메인 진입 페이지
+    ├── login.html      # 로그인 페이지
+    ├── monitoring.html # 실시간 관제 대시보드
+    └── violation_detail.html # 개별 위반 증거 확인 페이지
+```    
 
 # 시작하기
 >환경 설정
