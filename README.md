@@ -8,16 +8,10 @@
 
 >위반 자동 감지: 지정된 구역 내에서 적색 신호 시 차량 진입을 AI로 판별.
 
->증거 캡처 및 저장: 위반 순간을 스크린샷으로 자동 저장하고 고유 URL 생성.
-
->데이터베이스 연동: 위반 차량 ID, 시간, 증거 사진 URL을 SQLite DB에 자동 기록.
-
 # Tech Stack
 >Backend: Python, Flask
 
 >Computer Vision: OpenCV, NumPy
-
->Database: SQLite3
 
 >Frontend: HTML5, CSS3 (Bootstrap 5), JavaScript (Vanilla JS)
 
@@ -28,14 +22,10 @@ CWS-System/
 ├── app.py              # Flask 메인 서버 및 라우팅
 ├── control_logic.py    # ROI 판별 및 영상 처리 엔진
 ├── yolo_dummy.py       # 객체 인식 시뮬레이션 모델
-├── database.py         # SQLite DB 연동 및 테이블 관리
-├── static/
-│   └── violations/     # 위반 증거 스크린샷 저장 폴더
 └── templates/
     ├── index.html      # 메인 진입 페이지
     ├── login.html      # 로그인 페이지
     ├── monitoring.html # 실시간 관제 대시보드
-    └── violation_detail.html # 개별 위반 증거 확인 페이지
 ```    
 
 # 시작하기
