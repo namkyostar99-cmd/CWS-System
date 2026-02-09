@@ -23,32 +23,33 @@
 
 # 프로젝트 구조
 
-Plaintext
-├── app.py              # Flask 메인 서버 및 라우팅
-├── control_logic.py    # ROI 판별 및 영상 처리 엔진
-├── yolo_dummy.py       # 객체 인식 시뮬레이션 모델
-├── database.py         # SQLite DB 연동 및 테이블 관리
-├── static/
-│   └── violations/     # 위반 증거 스크린샷 저장 폴더
-└── templates/
-    ├── index.html      # 메인 진입 페이지
-    ├── login.html      # 로그인 페이지
-    ├── monitoring.html # 실시간 관제 대시보드
-    └── violation_detail.html # 개별 위반 증거 확인 페이지
-    
+>Plaintext
+>├── app.py              # Flask 메인 서버 및 라우팅
+>├── control_logic.py    # ROI 판별 및 영상 처리 엔진
+>├── yolo_dummy.py       # 객체 인식 시뮬레이션 모델
+>├── database.py         # SQLite DB 연동 및 테이블 관리
+>├── static/
+>│   └── violations/     # 위반 증거 스크린샷 저장 폴더
+>└── templates/
+>    ├── index.html      # 메인 진입 페이지
+>    ├── login.html      # 로그인 페이지
+>    ├── monitoring.html # 실시간 관제 대시보드
+>    └── violation_detail.html # 개별 위반 증거 확인 페이지
+
 # 시작하기
-1. 환경 설정
+>환경 설정
 Python 3.8 이상이 필요합니다. 필요한 라이브러리를 설치합니다.
 
 # Bash
-pip install flask opencv-python numpy
-2. 서버 실행
-Bash
-python app.py
-3. 시스템 접속
-브라우저를 열고 아래 주소로 접속하세요.
+>pip install flask opencv-python numpy
+- 서버 실행
+# Bash
+>python app.py
+- 시스템 접속
 
-URL: http://localhost:5000
+>브라우저를 열고 아래 주소로 접속하세요.
+
+>URL: http://localhost:5000
 
 로그인 후 관제 시스템 페이지에서 화면을 4번 클릭하여 ROI를 설정하세요.
 
