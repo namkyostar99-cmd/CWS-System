@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>CCTV 관제실</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="left">
+        <img id="logo" src="{{ url_for('static', filename='그림1.png') }}" alt="logo" />
+        <div class="brand">
+          <h1>Yellow YOLO</h1>
+          <div class="subtitle">CCTV 관제 대시보드</div>
+        </div>
+      </div>
+      <div class="right">
+        <div id="userArea">
+          <button id="loginBtn" class="btn">로그인</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <aside class="sidebar">
+        <nav>
+          <ul>
+            <li><a href="#" data-page="overview">Overview</a></li>
+            <li><a href="#" data-page="live" class="active">Live Feeds</a></li>
+            <li><a href="#" data-page="playback">Playback</a></li>
+            <li><a href="#" data-page="settings">Settings</a></li>
+          </ul>
+        </nav>
+        <section class="status">
+          <h4>✒️ 상태 및 기록</h4>
+          <div class="status-subtitle">신호등 전광판</div>
+          <div class="signal-board" id="signalBoard" data-state="RED">RED</div>
+          <div class="violation-wrap">
+            <div class="violation-title">실시간 위반 내역</div>
+            <div class="violation-list" id="violationList">
+              <div class="violation-item text-muted">연결 중...</div>
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <section class="content" id="content">
+        <div class="page" id="live">
+          <h2>📺 실시간 화면</h2>
+          <div class="video-card">
+            <div class="video-frame" id="videoFrame">
+              <img id="video-feed" src="{{ url_for('video_feed') }}" alt="video feed" />
+              <button id="uploadTrigger" class="upload-trigger" title="영상/카메라 업로드">🎥</button>
+            </div>
+            <div class="roi-info" id="roiInfo">
+              <div>설정된 좌표 로그</div>
+              <div id="roiLog" class="roi-log">(관리자 권한으로 ROI를 설정하세요)</div>
+            </div>
+            <div id="roiControls" class="roi-controls hidden">
+              <button id="roiStart" class="btn primary">ROI 설정 시작</button>
+              <button id="roiReset" class="btn">초기화</button>
+              <button id="roiDone" class="btn">설정 완료</button>
+            </div>
+          </div>
+        </div>
+
+        </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+    <script>
+        // 1. 실시간 상태 및 로그 업데이트 (1초마다)
+        setInterval(() => {
+            fetch('/get_status')
+                .then(res => res.json())
+                .then(data => {
+                    // 신호등 상태 업데이트
+                    const sigBoard = document.getElementById('signalBoard');
+                    if(sigBoard) {
+                        sigBoard.innerText = data.signal;
+                        sigBoard.setAttribute('data-state', data.signal);
+                    }
+
+                    // 위반 내역 리스트 업데이트
+                    const logDiv = document.getElementById('violationList');
+                    if(logDiv && data.logs) {
+                        // `${l}` 형태로 바로 출력 (Python에서 <a>태그 포함 문자열로 보냄)
+                        logDiv.innerHTML = data.logs.slice().reverse().map(l => 
+                            `<div class="violation-item">${l}</div>`
+                        ).join('');
+                    }
+                })
+                .catch(err => console.error("상태 로드 실패:", err));
+        }, 1000);
+
+        // 2. ROI 설정 완료 시 서버로 좌표 전송 (script.js의 roiPoints 사용)
+        document.getElementById('roiDone').addEventListener('click', () => {
+            // script.js 내부에 선언된 roiPoints 변수에 접근
+            if (typeof roiPoints !== 'undefined' && roiPoints.length >= 3) {
+                fetch('/set_roi', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ points: roiPoints })
+                })
+                .then(res => res.json())
+                .then(result => {
+                    if(result.status === "success") {
+                        alert("ROI 설정이 서버에 저장되었습니다.");
+                    }
+                });
+            } else {
+                alert("최소 3개 이상의 좌표를 선택해야 합니다.");
+            }
+        });
+    </script>
+  </body>
+</html>
