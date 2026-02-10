@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>위반 증거 상세 기록</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <style>
+        body { background-color: #1a1a1a; color: #e0e0e0; }
+        .evidence-card { 
+            background: #ffffff; 
+            color: #333; 
+            border-radius: 12px; 
+            overflow: hidden; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            margin-top: 50px;
+        }
+        .img-container { 
+            background: #000; 
+            padding: 10px; 
+            text-align: center;
+        }
+        .img-container img { 
+            max-width: 100%; 
+            border-radius: 4px;
+            border: 2px solid #dc3545; /* 위반 강조용 빨간 테두리 */
+        }
+        .info-table th { width: 30%; background-color: #f8f9fa; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="evidence-card">
+                <div class="card-header bg-danger text-white py-3">
+                    <h4 class="mb-0 text-center">🚨 교통 법규 위반 증거 데이터</h4>
+                </div>
+
+                <div class="img-container">
+                    <img src="{{ url_for('static', filename='violations/' + filename) }}" alt="위반 증거 스크린샷">
+                </div>
+
+                <div class="card-body p-4">
+                    <h5 class="border-bottom pb-2 mb-3">상세 기록 정보</h5>
+                    <table class="table table-bordered info-table">
+                        <tbody>
+                            <tr>
+                                <th>이미지 파일명</th>
+                                <td class="text-break">{{ filename }}</td>
+                            </tr>
+                            <tr>
+                                <th>저장 경로</th>
+                                <td><code>/static/violations/{{ filename }}</code></td>
+                            </tr>
+                            <tr>
+                                <th>판별 결과</th>
+                                <td><span class="badge bg-danger">신호 위반 (RED LIGHT)</span></td>
+                            </tr>
+                            <tr>
+                                <th>단속 시스템</th>
+                                <td>CWS-Child Watch System v1.0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <button class="btn btn-outline-secondary me-md-2" onclick="window.print()">증거 출력(PDF)</button>
+                        <button class="btn btn-dark" onclick="window.close()">창 닫기</button>
+                    </div>
+                </div>
+            </div>
+            
+            <p class="text-center mt-4 text-muted small">
+                본 이미지는 시스템에 의해 자동으로 캡처되었으며, 법적 근거 자료로 활용될 수 있습니다.
+            </p>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

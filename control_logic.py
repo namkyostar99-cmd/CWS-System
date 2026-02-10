@@ -1,21 +1,24 @@
 import cv2
 import numpy as np
+import os
 from datetime import datetime
 from yolo_dummy import DummyTrafficModel
+from database import save_violation_to_db
 
 class TrafficManager:
     def __init__(self):
         self.model = DummyTrafficModel()
-        # 4개의 좌표 (기본값: 사각형 형태)
         self.roi_points = [] 
         self.violated_ids = set()
-        self.prev_y_coords = {}
-        self.current_signal = "GREEN"
+        self.current_signal = "RED" # 초기값 RED 설정
+        self.save_folder = "static/violations/"
+        if not os.path.exists(self.save_folder):
+            os.makedirs(self.save_folder)
 
     def set_roi(self, points):
-        """JavaScript로부터 받은 4개의 좌표를 업데이트"""
-        if len(points) == 4:
-            self.roi_points = np.array(points, dtype=np.int32)
+        """script.js에서 보낸 [{px, py}, ...] 형식을 넘파이 배열로 변환"""
+        if len(points) >= 3:
+            self.roi_points = np.array([[p['px'], p['py']] for p in points], dtype=np.int32)
 
     def draw_and_analyze(self, frame):
         predictions = self.model.get_inference(frame)
@@ -31,30 +34,32 @@ class TrafficManager:
             if pred['label'] != 'car': continue
             x1, y1, x2, y2 = map(int, pred['bbox'])
             tid = pred['track_id']
-            cx, cy = (x1 + x2) // 2, y2 # 차량 하단 중앙점
+            cx, cy = (x1 + x2) // 2, y2 
 
-            # --- 다각형 ROI 내부 판별 ---
             is_inside = False
-            if len(self.roi_points) == 4:
-                # 점이 다각형 내부에 있는지 검사 (1: 내부, 0: 경계, -1: 외부)
-                dist = cv2.pointPolygonTest(self.roi_points, (float(cx), float(cy)), False)
-                is_inside = dist >= 0
+            if len(self.roi_points) >= 3:
+                is_inside = cv2.pointPolygonTest(self.roi_points, (float(cx), float(cy)), False) >= 0
 
-            if self.current_signal == "RED" and is_inside:
-                if tid not in self.violated_ids:
-                    violations.append(f"[{datetime.now().strftime('%H:%M:%S')}] ID {tid} 구역 위반!")
-                    self.violated_ids.add(tid)
+            if self.current_signal == "RED" and is_inside and tid not in self.violated_ids:
+                now = datetime.now()
+                timestamp_str = now.strftime('%Y-%m-%d %H:%M:%S')
+                file_name = f"violation_{tid}_{now.strftime('%H%M%S')}.jpg"
+                cv2.imwrite(os.path.join(self.save_folder, file_name), frame)
+                
+                v_url = f"/violation/{file_name}"
+                save_violation_to_db(tid, timestamp_str, file_name, v_url)
+                
+                # 새로운 프론트엔드 사이드바 '위반 내역'에 들어갈 태그 생성
+                log_entry = f"[{now.strftime('%H:%M:%S')}] ID {tid} 위반 <a href='{v_url}' target='_blank' style='color:#ff6b6b; margin-left:5px;'>[보기]</a>"
+                violations.append(log_entry)
+                self.violated_ids.add(tid)
             
             color = (0, 0, 255) if tid in self.violated_ids else (0, 255, 0)
             cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
-            cv2.putText(frame, f"ID:{tid}", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
-        # --- ROI 시각화 ---
-        if len(self.roi_points) == 4:
-            line_color = (0, 0, 255) if self.current_signal == "RED" else (0, 255, 0)
-            cv2.polylines(frame, [self.roi_points], isClosed=True, color=line_color, thickness=2)
-            for pt in self.roi_points:
-                cv2.circle(frame, tuple(pt), 5, (255, 0, 0), -1)
+        if len(self.roi_points) >= 3:
+            l_color = (0, 0, 255) if self.current_signal == "RED" else (0, 255, 0)
+            cv2.polylines(frame, [self.roi_points], True, l_color, 2)
 
         self.violated_ids = {tid for tid in self.violated_ids if tid in current_ids}
         return frame, violations
