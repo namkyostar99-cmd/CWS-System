@@ -54,7 +54,7 @@ def violation_detail(filename):
 def video_feed():
     """YOLO 분석 결과가 시각화된 실시간 영상을 전송"""
     def gen():
-        cap = cv2.VideoCapture(0)  # 웹캠 활성화
+        cap = cv2.VideoCapture("http://210.99.70.120:1935/live/cctv006.stream/playlist.m3u8")  # 웹캠 활성화
         while True:
             success, frame = cap.read()
             if not success:

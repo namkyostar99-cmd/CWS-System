@@ -5,6 +5,35 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>CCTV 관제실</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <style>
+      /* 2열 배치를 위한 Playback 전용 스타일 */
+      .playback-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        padding: 10px;
+      }
+      .evidence-card {
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      }
+      .evidence-card img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        display: block;
+      }
+      .evidence-info {
+        padding: 10px;
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+      .evidence-info b { color: #e74c3c; }
+      .hidden { display: none; }
+    </style>
   </head>
   <body>
     <header class="topbar">
@@ -65,28 +94,35 @@
           </div>
         </div>
 
-        </section>
+        <div class="page hidden" id="playback">
+          <h2>📂 위반 증거 기록 (Playback)</h2>
+          <div id="playbackList" class="playback-grid">
+            </div>
+        </div>
+      </section>
     </main>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 
     <script>
+        // 전역 변수로 최신 로그 보관
+        let latestLogs = [];
+
         // 1. 실시간 상태 및 로그 업데이트 (1초마다)
         setInterval(() => {
             fetch('/get_status')
                 .then(res => res.json())
                 .then(data => {
-                    // 신호등 상태 업데이트
+                    latestLogs = data.logs; // Playback 갱신을 위해 저장
+                    
                     const sigBoard = document.getElementById('signalBoard');
                     if(sigBoard) {
                         sigBoard.innerText = data.signal;
                         sigBoard.setAttribute('data-state', data.signal);
                     }
 
-                    // 위반 내역 리스트 업데이트
                     const logDiv = document.getElementById('violationList');
                     if(logDiv && data.logs) {
-                        // `${l}` 형태로 바로 출력 (Python에서 <a>태그 포함 문자열로 보냄)
                         logDiv.innerHTML = data.logs.slice().reverse().map(l => 
                             `<div class="violation-item">${l}</div>`
                         ).join('');
@@ -95,9 +131,62 @@
                 .catch(err => console.error("상태 로드 실패:", err));
         }, 1000);
 
-        // 2. ROI 설정 완료 시 서버로 좌표 전송 (script.js의 roiPoints 사용)
+        // 2. 메뉴 탭 전환 및 Playback 렌더링 로직
+        document.querySelectorAll('.sidebar nav a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetPage = e.target.getAttribute('data-page');
+                
+                // 모든 페이지 숨기고 선택된 페이지만 표시
+                document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+                const activePage = document.getElementById(targetPage);
+                if(activePage) activePage.classList.remove('hidden');
+
+                // 네비게이션 활성화 표시
+                document.querySelectorAll('.sidebar nav a').forEach(a => a.classList.remove('active'));
+                e.target.classList.add('active');
+
+                // Playback 페이지 클릭 시 2열 그리드 생성
+                if(targetPage === 'playback') {
+                    renderPlayback();
+                }
+            });
+        });
+
+        function renderPlayback() {
+            const container = document.getElementById('playbackList');
+            if(!container) return;
+
+            if(latestLogs.length === 0) {
+                container.innerHTML = "<p>기록된 위반 내역이 없습니다.</p>";
+                return;
+            }
+
+            container.innerHTML = latestLogs.slice().reverse().map(logHtml => {
+                // 로그 HTML 문자열에서 데이터 추출
+                // 예: [12:00:00] ID 5 위반 <a href='/violation/file.jpg' ...>
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = logHtml;
+                const link = tempDiv.querySelector('a');
+                const imgUrl = link ? link.getAttribute('href').replace('/violation/', '/static/violations/') : '';
+                const detailUrl = link ? link.getAttribute('href') : '#';
+                const text = tempDiv.innerText.replace('[보기]', '').trim();
+
+                return `
+                    <div class="evidence-card">
+                        <img src="${imgUrl}" alt="위반 증거" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
+                        <div class="evidence-info">
+                            <b>🚨 위반 탐지</b><br>
+                            ${text}<br>
+                            <a href="${detailUrl}" target="_blank" style="color:blue; text-decoration:underline;">상세 보기 (Full Resolution)</a>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 3. ROI 설정 완료 시 서버로 좌표 전송
         document.getElementById('roiDone').addEventListener('click', () => {
-            // script.js 내부에 선언된 roiPoints 변수에 접근
             if (typeof roiPoints !== 'undefined' && roiPoints.length >= 3) {
                 fetch('/set_roi', {
                     method: 'POST',
