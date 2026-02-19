@@ -9,10 +9,10 @@ class TrafficManager:
     def __init__(self):
         # YOLO26n 모델 로드 (파일이 없을 경우 자동 다운로드 시도 또는 경로 지정 필요)
         try:
-            self.model = YOLO('0211v26n_total_run_12best.pt') 
+            self.model = YOLO('best.pt') 
         except:
             # 모델 파일명이 다를 경우를 대비해 기본 모델로 예외 처리 가능
-            self.model = YOLO('0211v26n_total_run_12best.pt') 
+            self.model = YOLO('best.pt') 
             
         self.roi_points = [] 
         self.violated_ids = set()
@@ -29,7 +29,7 @@ class TrafficManager:
     def draw_and_analyze(self, frame):
         # 실제 YOLO26n 추론 수행 (persist=True로 객체 추적 활성화)
         
-        results = self.model.track(frame, imgsz=1280, conf=0.1, persist=True, verbose=False)
+        results = self.model.track(frame, imgsz=1280, conf=0.22, persist=True, verbose=False)
         
         # 기본 신호 상태 초기화 (탐지되지 않을 경우의 기본값)
         # 기존 로직 유지: traffic_light 탐지 시 업데이트
